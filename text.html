@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Stars</title>
+		<script type="text/javascript" src="js/dat.gui.js"></script>
+		<script type="text/javascript" src="js/star.js"></script>
+		<script type="text/javascript" src="js/particles.js"></script>
+		<script type="text/javascript" src="js/riffwave.js"></script>
+		<script type="text/javascript">
+
+		var Controller =  function(count)
+		{
+			this.numStars = count;
+			this.oldNumStars = count;
+			this.canvasOffsetX = 0;
+			this.canvasOffsetY = 0;
+			this.particleField = new ParticleField(799,499,3,0.6);
+			this.pushRadius=200;
+			this.addStars = true;
+			this.showFPS = true;
+			var Point = function(xx,yy)
+			{
+				this.x = xx;
+				this.y = yy;
+			}
+			this.currentMousePosition = new Point(0,0);
+		};
+
+
+
+		
+		function ev_canvas(e) {
+
+			
+			if (con.addStars)
+			{
+				con.numStars++;
+				con.oldNumStars = con.numStars;
+				//stars.shift();
+				stars.push(new Star(e.pageX-con.canvasOffsetX-64,e.pageY-con.canvasOffsetY-64));
+			}
+			con.particleField.push(e.pageX-con.canvasOffsetX,e.pageY-con.canvasOffsetY,con.pushRadius);
+		}
+		function ev_canvasMouseMove(e) {
+			con.currentMousePosition.x = e.pageX-con.canvasOffsetX;
+			con.currentMousePosition.y = e.pageY-con.canvasOffsetY,con.pushRadius;
+			con.particleField.setGlow(con.currentMousePosition.x, con.currentMousePosition.y, 20);
+		}
+
+		var con;
+		var stars = new Array();
+		var then = Date.now();
+		var time = 1000;
+		var frames = 0;
+		var fps = 0;
+		function init()
+		{
+			con = new Controller(0);
+			for (var i = 0; i < con.numStars; i++)
+			{
+				try{
+				stars.push(new Star(Math.round(-50+Math.random()*750), Math.round(-50+Math.random()*450)));
+				}catch(e) {alert(e);}
+			}	
+			con.particleField.populateText("画素",300);
+			var gui = new dat.GUI();
+			//gui.add(con, "numStars",1,50).listen();
+			gui.add(con.particleField, "numParticles").listen();
+			gui.add(con.particleField, "initText");
+			gui.add(con.particleField, "collision");
+			gui.add(con, "pushRadius");
+			gui.add(con, "addStars");
+			gui.add(con, "showFPS");
+			
+			//con.particleField.collision=true;
+						
+			setInterval(main,1);	
+		}
+
+		function main()
+		{
+			if (con.particleField.numParticles != con.particleField.particles.length)
+				con.particleField.populate(con.particleField.numParticles);
+			if (con.particleField.initText != con.particleField.text)
+				con.particleField.populateText(con.particleField.initText, 300);
+
+			var canvas = document.getElementById("starcanvas");
+			var cvx = canvas.getContext('2d');
+			con.canvasOffsetX=canvas.offsetLeft;
+			con.canvasOffsetY=canvas.offsetTop;
+			canvas.addEventListener('mousedown', ev_canvas, false);
+			canvas.addEventListener('mousemove', ev_canvasMouseMove, false);
+
+			var now = Date.now();
+			var delta = now - then;
+			
+			cvx.fillStyle = "rgb(0,0,0)";
+			cvx.fillRect(0,0,800,500);
+			if (stars.length > 0)
+			{
+				cvx.fillStyle = "rgba("+stars[stars.length-1].rgbString+","+stars[stars.length-1].timeToLive/7000+")";
+				cvx.fillRect(0,0,800,500);
+			}
+				
+
+			time -= delta;
+			frames++;
+			if (time < 0) {
+				fps = frames;
+				frames = 0;
+				time = 1000;
+			}
+				
+			//alert(con.numStars);
+			if (con.numStars != con.oldNumStars)
+			{
+				stars = new Array();
+ 				for (var i = 0; i < con.numStars; i++)
+				{
+					stars.push(new Star(-50+Math.round(Math.random()*750), Math.round(-50+Math.random()*450)));
+				
+				}
+				con.oldNumStars = con.numStars;
+				
+			}
+			
+			con.particleField.update(delta/1000);
+			//con.particleField.setGlow(con.currentMousePosition.x, con.currentMousePosition.y, 20);
+			for (i = 0; i < con.particleField.particles.length; i++)
+			{
+				
+				if (con.particleField.particles[i].path.length>0)
+				{				
+					if ((Math.round(con.particleField.particles[i].x) != Math.round(con.particleField.particles[i].path[0].x)) ||
+						(Math.round(con.particleField.particles[i].y) != Math.round(con.particleField.particles[i].path[0].y)))
+					{
+						cvx.strokeStyle="rgba("+con.particleField.particles[i].rgbString+",0.2)";
+						cvx.beginPath();
+						cvx.lineWidth = 1;
+						cvx.moveTo(con.particleField.particles[i].path[0].x, con.particleField.particles[i].path[0].y);
+						cvx.lineTo(con.particleField.particles[i].x+con.particleField.size/2, con.particleField.particles[i].y+con.particleField.size/2);
+						cvx.stroke();
+						cvx.closePath();
+						
+					}					
+				}
+				cvx.fillStyle="rgba("+con.particleField.particles[i].rgbString+",0.6)";
+				cvx.fillRect(con.particleField.particles[i].x, con.particleField.particles[i].y, con.particleField.size,con.particleField.size);
+				if (con.particleField.particles[i].glow > 0)
+				{
+					cvx.fillStyle="rgba(255,255,255,"+con.particleField.particles[i].glow*0.7+")";
+					cvx.fillRect(con.particleField.particles[i].x, con.particleField.particles[i].y, con.particleField.size,con.particleField.size);			
+				}
+			}
+									
+			for (i = 0; i < stars.length; i++)
+			{	
+				stars[i].fade(delta/1000);
+				stars[i].draw(cvx);				
+			}
+			for (i = 0; i < stars.length; i++)
+			{
+				if (stars[i].timeToLive < 0)
+					stars.shift();	
+			}			
+			
+
+			if (con.showFPS)
+			{			
+				cvx.fillStyle = "rgb(220,220,220)";
+				cvx.textAlign ="left";
+				cvx.textBaseline = "top";
+				cvx.fillText("fps "+fps, 4,4);
+			}
+
+			cvx.strokeStyle = "rgb(200,90,90)";
+			cvx.lineWidth = 1;
+			cvx.strokeRect(1,1,798,498);
+			then = now;
+		}
+			
+		</script>
+	</head>
+	<body onload="init();" bgcolor="#202020">
+		<center>
+			<br /><br /><br />
+		<canvas width="800" height="500" id="starcanvas"></canvas>
+		<script type="text/javascript">
+		</script>
+	</body>
+
+</html>
