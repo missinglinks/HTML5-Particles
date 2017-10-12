@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Collision Test</title>
+		<script type="text/javascript" src="js/dat.gui.js"></script>
+        <script type="text/javascript" src="js/particles.js"></script>
+        <link rel="stylesheet" type="text/css" href="css/main.css" />
+        
+        <script type="text/javascript">
+        	var particleField = new ParticleField(500,300,10,.6);
+        	var canvasOffsetX;
+        	var canvasOffsetY;
+        	var pushRadius = 90;
+        	
+        	
+        	function init()
+        	{
+				var cdiv = document.getElementById("canvasdiv");
+				canvasOffsetX=cdiv.offsetLeft;
+				//cdiv.offsetParent.width
+				canvasOffsetY=cdiv.offsetTop;        		
+        		particleField.populate(220);
+        		particleField.collision = true;
+        		particleField.pathOn = false;
+        		
+        		 var gui = new dat.GUI();
+				//gui.add(con, "numStars",1,50).listen();
+				gui.add(particleField, "numParticles");
+				gui.add(particleField, "collision");
+        		gui.add(particleField.particles[0], "moveX").listen();
+        		gui.add(particleField.particles[0], "moveY").listen();
+        		gui.add(particleField.particles[0], "moveDistance").listen();
+        		gui.add(particleField.particles[1], "moveX").listen();
+        		gui.add(particleField.particles[1], "moveY").listen();
+        		gui.add(particleField.particles[1], "moveDistance").listen();
+        		
+        		setInterval(main,1);
+        		
+        	}
+        	
+        	function ev_canvas(e)
+        	{
+ 				particleField.push(e.pageX-canvasOffsetX,e.pageY-canvasOffsetY, pushRadius); 
+
+   		
+        	}
+        	
+        	var then = Date.now();
+        	function main()
+        	{
+        		var now = Date.now();
+        		var delta = now-then;
+				
+				var canvas = document.getElementById("canvas");
+				var cvx = canvas.getContext('2d');
+				
+				
+				canvas.addEventListener('mousedown', ev_canvas, false);  
+				
+				cvx.fillStyle = "rgb(20,20,50)";
+				cvx.fillRect(0,0,500,300);
+				
+				particleField.update(delta/1000);
+				particleField.draw(cvx);
+				
+				cvx.strokeStyle ="rgb(100,100,100)";
+				cvx.strokeRect(1,1,498,298);
+				cvx.stroke();    
+				
+				then = now;  		
+        	}
+        	
+        </script>
+	</head>
+	<body onload="init();">
+		<div class="header">
+			<h1>Collision Test</h1>
+		</div>
+		<div class="game" id="canvasdiv">
+			<canvas id="canvas" width="500" height="300"></canvas>
+			<script type="text/javascript">
+						
+			</script>
+		</div>
+		<div class="footer">
+			
+		</div> 
+	</body>
+
+</html>
