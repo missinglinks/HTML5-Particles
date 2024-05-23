@@ -16,7 +16,7 @@
 			this.canvasOffsetX = 0;
 			this.canvasOffsetY = 0;
 			this.particleField = new ParticleField(799,499,3,0.6);
-			this.pushRadius=200;
+			this.pushRadius=150;
 			this.addStars = true;
 			this.showFPS = true;
 			var Point = function(xx,yy)
@@ -102,7 +102,7 @@
 				cvx.fillStyle = "rgba("+stars[stars.length-1].rgbString+","+stars[stars.length-1].timeToLive/7000+")";
 				cvx.fillRect(0,0,800,500);
 			}
-				
+
 
 			time -= delta;
 			frames++;
